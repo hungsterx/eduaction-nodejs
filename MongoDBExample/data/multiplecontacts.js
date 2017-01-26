@@ -1,5 +1,17 @@
 [
 	{
+		"firstname": "Hoa",
+		"lastname": "To",
+		"title": "Mr.",
+		"company": "Lant",
+		"jobtitle": "Developer",
+		"primarycontactnumber": "+46701222233",
+		"othercontactnumbers": ["+46703222233", "+46703222233"],
+		"primarymailaddress": "phu.to@xyz.com",
+		"emailaddresses": ["p.to@xyz.com"],
+		"groups": ["Lant", "Family"]
+	},
+	{
 		"firstname": "Phu",
 		"lastname": "To",
 		"title": "Mr.",
@@ -23,7 +35,7 @@
 		"emailaddresses": ["h.nguy@xyz.com"],
 		"groups": ["Lager", "Family"]
 	},
-		{
+	{
 		"firstname": "Kalle",
 		"lastname": "Ve",
 		"title": "Mr.",
