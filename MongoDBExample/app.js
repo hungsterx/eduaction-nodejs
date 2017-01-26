@@ -8,22 +8,29 @@ var express = require('express')
   , user = require('./routes/user')
   , http = require('http')
   , path = require('path')
-  , mongoosehandler = require('./modules/mongoosehandler');
+  , mongoose = require('mongoose')
+  , contactservice = require('./modules/contactdataservice')
+  , contacts = require('./modules/contacts')
+  , url = require('url');
 
 var app = express();
-var Contact = mongoosehandler.Contact;
-var john_douglas = new Contact({
-	firstname: "John",
-	lastname: "Douglas",
-	title: "Mr.",
-	company: "Dev Inc",
-	jobtitle: "Developer",
-	primarycontactnumber: "+46703909488",
-	othercontactnumbers: [],
-	primaryEmailaddress: "john.diuglas@xyz.com",
-	emailaddress: ["j.diuglas@xyz.com"],
-	groups: ["Dev"]
+
+mongoose.connect('mongodb://localhost/contacts');
+		
+var contactSchema = new mongoose.Schema({
+	firstname: String,
+	lastname: String,
+	title: String,
+	company: String,
+	jobtitle: String,
+	primaryContactNumber: {type: String, index: {unique: true}},
+	othercontactnumbers: [String],
+	primaryEmailaddress: String,
+	emailaddress: [String],
+	groups: [String]
 });
+
+var Contact = mongoose.model('Contact', contactSchema);
 // all environments
 app.set('port', process.env.PORT || 3000);
 app.set('views', __dirname + '/views');
@@ -35,6 +42,28 @@ app.use(express.methodOverride());
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/contacts/:number', function(request, response) {
+	console.log(request.url + ' : querying for ' + request.params.number);
+	contactservice.findByNumber(Contact, request.params.number, response);
+});
+
+app.put('/contacts', function(request, response) {
+	contactservice.create(Contact, request.body, response);
+});
+
+app.post('/contacts', function(request, response) {
+	contactservice.update(Contact, request.body, response);
+});
+
+app.del('/contacts/:primaryContactNumber', function(request, response) {
+	contactservice.remove(Contact, request.params.primaryContactNumber, response);
+});
+
+app.get('/contacts', function(request, response) {
+	console.log('Listing all contacts with ' + request.params.key + '=' + request.params.value);
+	contactservice.list(Contact, response);
+});
+
 // development only
 if ('development' == app.get('env')) {
   app.use(express.errorHandler());
@@ -44,5 +73,6 @@ app.get('/', routes.index);
 app.get('/users', user.list);
 
 http.createServer(app).listen(app.get('port'), function(){
+
   console.log('Express server listening on port ' + app.get('port'));
 });
