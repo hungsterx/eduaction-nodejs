@@ -9,6 +9,7 @@ var express = require('express')
   , http = require('http')
   , path = require('path')
   , mongoose = require('mongoose')
+  , Grid = require('gridfs-stream')
   , contactservice = require('./modules/contactdataservice_1')
   , contactservice_v2 = require('./modules/contactdataservice_2')
   , contacts = require('./modules/contacts')
@@ -17,6 +18,7 @@ var express = require('express')
 var app = express();
 
 mongoose.connect('mongodb://localhost/contacts');
+var mongodb = mongoose.connection;
 		
 var contactSchema = new mongoose.Schema({
 	firstname: String,
@@ -24,10 +26,10 @@ var contactSchema = new mongoose.Schema({
 	title: String,
 	company: String,
 	jobtitle: String,
-	primaryContactNumber: {type: String, index: {unique: true}},
+	primarycontactnumber: {type: String, index: {unique: true}},
 	othercontactnumbers: [String],
-	primaryEmailaddress: String,
-	emailaddress: [String],
+	primarymailaddress: String,
+	emailaddresses: [String],
 	groups: [String]
 });
 
@@ -69,6 +71,7 @@ app.get('/contacts', function(request, response) {
 	console.log('Testing new apis ' + request.params.key + '=' + request.params.value);
 	var get_params = url.parse(request.url, true).query;
 	if(Object.keys(get_params).length == 0) {
+		console.log('no params');
 		contactservice_v2.list(Contact, response);
 	} else {
 		var key = Object.keys(get_params)[0];
@@ -77,6 +80,45 @@ app.get('/contacts', function(request, response) {
 	}
 
 });
+
+app.get('/contacts/:number', function(request, response) {
+	console.log(request.url + ' : querying for ' + request.params.number);
+	contactservice_v2.findByNumber(Contact, request.params.number, response);
+});
+
+app.put('/contacts', function(request, response) {
+	contactservice_v2.create(Contact, request.body, response);
+});
+
+app.post('/contacts', function(request, response) {
+	contactservice_v2.update(Contact, request.body, response);
+});
+
+app.del('/contacts/:primaryContactNumber', function(request, response) {
+	contactservice_v2.remove(Contact, request.params.primaryContactNumber, response);
+});
+
+app.get('/contacts/:number/image', function(request, response) {
+	console.log(request.url + ' : querying for ' + request.params.number);
+	var gfs = Grid(mongodb.db, mongoose.mongo);
+	contactservice_v2.getImage(gfs, request.params.number, response);
+});
+
+app.put('/contacts/image', function(request, response) {
+	var gfs = Grid(mongodb.db, mongoose.mongo);
+	contactservice_v2.updateImage(gfs, request, response);
+});
+
+app.post('/contacts/image', function(request, response) {
+	var gfs = Grid(mongodb.db, mongoose.mongo);
+	contactservice_v2.updateImage(gfs, request, response);
+});
+
+app.del('/contacts/:primaryContactNumber/image', function(request, response) {
+	var gfs = Grid(mongodb.db, mongoose.mongo);
+	contactservice_v2.deleteImage(gfs, mongodb.db, request.params.primaryContactNumber, response);
+});
+
 
 //app.get('/contacts', function(request, response) {
 //	response.writeHead(301, {'Location' : '/v1/contacts/'});

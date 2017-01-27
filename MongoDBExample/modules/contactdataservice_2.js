@@ -4,22 +4,22 @@
 
 function toContact(body, Contact) {
 	return new Contact({
-		primaryContactNumber: body.primaryContactNumber,
 		firstname: body.firstname,
 		lastname: body.lastname,
 		title: body.title,
 		company: body.company,
 		jobtitle: body.jobtitle,
+		primarycontactnumber: body.primarycontactnumber,
 		othercontactnumbers: body.othercontactnumbers,
-		primaryEmailaddress: body.primaryEmailaddress,
-		emailaddress: body.emailaddress,
+		primarymailaddress: body.primarymailaddress,
+		emailaddresses: body.emailaddresses,
 		groups: body.groups
 	});
 }
 
 exports.remove = function(model, _primarycontactnumber, response) {
 	console.log('Deleting contact with primary number: ' + _primarycontactnumber);
-	model.findOne({primaryContactNumber: _primarycontactnumber},
+	model.findOne({primarycontactnumber: _primarycontactnumber},
 			function(error, data) {
 				if(error) {
 					console.log(error);
@@ -56,8 +56,8 @@ exports.remove = function(model, _primarycontactnumber, response) {
 };
 
 exports.update = function(model, requestBody, response) {
-	var primarycontactnumber = requestBody.primaryContactNumber;
-	model.findOne({primaryContactNumber: primarycontactnumber},
+	var _primarycontactnumber = requestBody.primarycontactnumber;
+	model.findOne({primarycontactnumber: _primarycontactnumber},
 			function(error, data) {
 				if(error) {
 					console.log(error);
@@ -69,7 +69,7 @@ exports.update = function(model, requestBody, response) {
 				} else {
 					var contact = toContact(requestBody, model);
 					if(!data) {
-						console.log('Contact with ' + primarycontactnumber + ' does not exist.' +
+						console.log('Contact with ' + _primarycontactnumber + ' does not exist.' +
 								' The contact will be created');
 						contact.save(function(error) {
 							if(!error) {
@@ -85,15 +85,15 @@ exports.update = function(model, requestBody, response) {
 						}
 						return;
 					} else {
-						data.primaryContactNumber = contact.primaryContactNumber;
 						data.firstname = contact.firstname;
 						data.lastname = contact.lastname;
 						data.title = contact.title;
 						data.company = contact.company;
 						data.jobtitle = contact.jobtitle;
+						data.primarycontactnumber = contact.primarycontactnumber;
 						data.othercontactnumbers = contact.othercontactnumbers;
-						data.primaryEmailaddress = contact.primaryEmailaddress;
-						data.emailaddress = contact.emailaddress;
+						data.primarymailaddress = contact.primarymailaddress;
+						data.emailaddresses = contact.emailaddresses;
 						data.groups = contact.groups;
 						data.save(function(error) {
 							if(!error) {
@@ -117,14 +117,14 @@ exports.update = function(model, requestBody, response) {
 
 exports.create = function(model, requestBody, response) {
 	var contact = toContact(requestBody, model);
-	var primarycontactnumber = requestBody.primaryContactNumber;
+	var _primarycontactnumber = requestBody.primarycontactnumber;
 	contact.save(function(error) {
 		if(!error) {
 			contact.save();
 		} else {
 			console.log('checking if contact failed to save due to already exist a contact with ' +
-					'primary number: ' + primarycontactnumber);
-			model.findOne({primaryContactNumber: primarycontactnumber},
+					'primary number: ' + _primarycontactnumber);
+			model.findOne({primarycontactnumber: _primarycontactnumber},
 					function(error, data) {
 						if(error) {
 							console.log(error);
@@ -136,7 +136,7 @@ exports.create = function(model, requestBody, response) {
 						} else {
 							var contact = toContact(requestBody, model);
 							if(!data) {
-								console.log('Contact with ' + primarycontactnumber + ' does not exist.' +
+								console.log('Contact with ' + _primarycontactnumber + ' does not exist.' +
 										' The contact will be created');
 								contact.save(function(error) {
 									if(!error) {
@@ -152,15 +152,15 @@ exports.create = function(model, requestBody, response) {
 								}
 								return;
 							} else {
-								data.primaryContactNumber = contact.primaryContactNumber;
 								data.firstname = contact.firstname;
 								data.lastname = contact.lastname;
 								data.title = contact.title;
 								data.company = contact.company;
 								data.jobtitle = contact.jobtitle;
+								data.primarycontactnumber = contact.primarycontactnumber;
 								data.othercontactnumbers = contact.othercontactnumbers;
-								data.primaryEmailaddress = contact.primaryEmailaddress;
-								data.emailaddress = contact.emailaddress;
+								data.primarymailaddress = contact.primarymailaddress;
+								data.emailaddresses = contact.emailaddresses;
 								data.groups = contact.groups;
 								data.save(function(error) {
 									if(!error) {
@@ -184,8 +184,8 @@ exports.create = function(model, requestBody, response) {
 	});
 };
 
-exports.findByNumber = function(model, _primaryContactNumber, response) {
-	model.findOne({primaryContactNumber: _primaryContactNumber},
+exports.findByNumber = function(model, _primarycontactnumber, response) {
+	model.findOne({primarycontactnumber: _primarycontactnumber},
 			function(error, result) {
 				if(error) {
 					console.log(error);
@@ -255,3 +255,52 @@ exports.query_by_arg = function (model, key, value, response) {
 
 	});
 };
+
+exports.updateImage = function(gfs, request, response) {
+	var _primarycontactnumber = request.params.primarycontactnumber;
+	console.log('Updating image for primary contact number:' + _primarycontactnumber);
+	request.pipe(gfs.createWriteStream({
+		_id : _primarycontactnumber,
+		filename : 'image',
+		mode : w
+	}));
+	response.send("Successfully uploaded image for primary contact number: " + _primarycontactnumber);
+}
+
+exports.getImage = function(gfs, _primarycontactnumber, response) {
+	console.log('Requesting image for primary contact number:' + _primarycontactnumber);
+	
+	var imageStream = gfs.createReadStream({
+		_id : _primarycontactnumber,
+		filename : 'image',
+		mode : r
+	});
+
+	imageStream.on('error', function(error) {
+		response.send('404', 'Not Found');
+		return;
+	});
+	response.setHeader('Content-Type', 'image/jpeg');
+	imageStream.pipe(response);
+}
+
+exports.deleteImage = function(gfs, mongodb, _primarycontactnumber, response) {
+	console.log('Delete an image for primary contact number:' + _primarycontactnumber);
+	var collection = mongodb.collection('fs.files');
+	
+	collection.remove({_id : _primarycontactnumber, filename: 'image'}, function(error, contact) {
+		if(error) {
+			console.log('error');
+			return;
+		}
+		
+		if(contact === null) {
+			response.send('404', 'Not Found');
+			return;
+		} else {
+			console.log('Successfully deleted an image for primary contact number: ' + _primarycontactnumber);
+		}
+	});
+	
+	response.send('Successfully deleted an image for primary contact number: ' + _primarycontactnumber);
+}
