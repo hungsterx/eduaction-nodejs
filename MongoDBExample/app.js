@@ -95,6 +95,7 @@ app.post('/contacts', function(request, response) {
 });
 
 app.del('/contacts/:primaryContactNumber', function(request, response) {
+	console.log(request.url + ' : querying for ' + request.params.number);
 	contactservice_v2.remove(Contact, request.params.primaryContactNumber, response);
 });
 
@@ -104,12 +105,14 @@ app.get('/contacts/:number/image', function(request, response) {
 	contactservice_v2.getImage(gfs, request.params.number, response);
 });
 
-app.put('/contacts/image', function(request, response) {
+app.put('/contacts/:primaryContactNumber/image', function(request, response) {
+	console.log(request.url + ' : querying for ' + request.params.number);
 	var gfs = Grid(mongodb.db, mongoose.mongo);
 	contactservice_v2.updateImage(gfs, request, response);
 });
 
-app.post('/contacts/image', function(request, response) {
+app.post('/contacts/:primaryContactNumber/image', function(request, response) {
+	console.log(request.url + ' : querying for ' + request.params.primaryContactNumber);
 	var gfs = Grid(mongodb.db, mongoose.mongo);
 	contactservice_v2.updateImage(gfs, request, response);
 });

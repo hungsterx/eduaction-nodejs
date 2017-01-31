@@ -257,12 +257,12 @@ exports.query_by_arg = function (model, key, value, response) {
 };
 
 exports.updateImage = function(gfs, request, response) {
-	var _primarycontactnumber = request.params.primarycontactnumber;
+	var _primarycontactnumber = request.params.primaryContactNumber;
 	console.log('Updating image for primary contact number:' + _primarycontactnumber);
 	request.pipe(gfs.createWriteStream({
 		_id : _primarycontactnumber,
 		filename : 'image',
-		mode : w
+		mode : 'w'
 	}));
 	response.send("Successfully uploaded image for primary contact number: " + _primarycontactnumber);
 }
@@ -273,7 +273,7 @@ exports.getImage = function(gfs, _primarycontactnumber, response) {
 	var imageStream = gfs.createReadStream({
 		_id : _primarycontactnumber,
 		filename : 'image',
-		mode : r
+		mode : 'r'
 	});
 
 	imageStream.on('error', function(error) {
